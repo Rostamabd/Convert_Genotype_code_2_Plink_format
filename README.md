@@ -8,9 +8,9 @@
 
 Preparation of genotype data for Genome-wide association studies and Genomic Selection is an unavoidable and time consuming step in genomic analysis. 
 
-genotyping data usually come from the genotyping company or institauation in the lgen or SNP coding format.
+Genotype data usually come from the genotyping company or institutions in the lgen or SNP coding format.
 
-Plink, GCTA, R are basically the basic programs for GWAS and Genomic Prediction. Here I have provided a code in both R and shell for converting the genotype data fron SNP code (0=AA, 1=AB and 2=BB) to plink format. 
+Plink, GCTA, R are basically the basic programs for GWAS and Genomic Prediction. Here, I have provided a code in both R and shell for converting the genotype data fron SNP code (0=AA, 1=AB and 2=BB) to plink format. 
 
 ## 1) Convert from 0, 1 and 2 to Plink Format Using R
 
@@ -45,7 +45,52 @@ Then, you can follow the rest of preparation similar to R and shell scripts.
 
 ## 3) Genome-wide Association Analysis using Plink
 
-Under construction
+- Convert ASCII data to binary. Remember to use plink 1.07 version
+
+```
+module load plink
+plink --file geno --sheep --make-bed --out wgas2
+```
+
+- Allele frequency calculation
+
+```
+plink --bfile wgas2 --nonfounders --freq --out freq1
+plink --bfile wgas2 --nonfounders --hardy --out hwe1
+```
+
+- Quality Control
+
+```
+plink --bfile wgas2 --maf 0.01 --geno 0.05 --mind 0.05 --hwe 1e-6 --nonfounders --make-bed --out wgas3
+```
+
+- Single marker linear association analysis
+
+```
+plink --bfile wgas3 --assoc --adjust --out assoc1
+```
+
+- Extracting certain SNP and conducting association
+
+```
+plink --bfile wgas3 --recode --snp rs11204005 --out tophit
+plink --file tophit --all --missing
+plink --file tophit --hardy
+```
+
+- EMPIRICAL ASSESSMENT OF POPULATION STRATIFICATION
+
+```
+plink --bfile wgas3 --indep-pairwise 50 10 0.2 --out prune1
+plink --bfile wgas3 --extract prune1.prune.in --genome --out ibs1
+```
+
+- Constraints on clustering, pairwise population concordance (ppc)
+
+```
+plink --bfile wgas3 --read-genome ibs1.genome --cluster --ppc 1e-3 --cc --mds-plot 2 --out strat1
+```
 
 ## Contact Information
 
